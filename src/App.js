@@ -12,12 +12,11 @@ import TVDetail from './components/TVDetail/TVDetail';
 import Player from './components/Player/Player';
 import Watchlist from './components/Watchlist/Watchlist';
 import Settings from './components/Settings/Settings';
+import SeriesComplete from './components/SeriesComplete/SeriesComplete';
 
 // Context
 import { WatchlistProvider } from './context/WatchlistContext';
 import { SettingsProvider } from './context/SettingsContext';
-
-// Styles
 import './styles/App.css';
 
 function App() {
@@ -39,6 +38,7 @@ function App() {
                 <Route path="/movie/:id" element={<MovieDetail />} />
                 <Route path="/tv/:id" element={<TVDetail />} />
                 <Route path="/play/:type/:id" element={<Player />} />
+                <Route path="/series-complete/:id" element={<SeriesComplete />} />
                 <Route path="/watchlist" element={<Watchlist />} />
                 <Route path="/settings" element={<Settings />} />
                 {/* Catch-all route for unmatched paths */}

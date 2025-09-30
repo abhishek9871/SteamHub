@@ -1,0 +1,346 @@
+/* TV Detail Specific Styles */
+
+.tv-detail .type-badge.tv {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+}
+
+/* Seasons Section */
+.seasons-section {
+  margin-top: 40px;
+}
+
+.seasons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.season-item {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.season-item:hover {
+  border-color: var(--primary-color);
+}
+
+.season-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.season-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.season-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.season-poster-small {
+  width: 60px;
+  height: 90px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.season-poster-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.season-poster-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.season-header-info h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--text-primary);
+}
+
+.season-meta {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.season-toggle-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.season-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+/* Season Episodes */
+.season-episodes {
+  padding: 0 20px 20px 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.episodes-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 16px;
+}
+
+.loading-spinner-small {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.episodes-loading p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.episodes-grid-detail {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.episode-card-detail {
+  display: flex;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.episode-card-detail:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--primary-color);
+  transform: translateX(4px);
+}
+
+.episode-card-detail.watched {
+  opacity: 0.7;
+}
+
+.episode-thumbnail-detail {
+  position: relative;
+  width: 200px;
+  height: 112px;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.episode-thumbnail-detail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.episode-card-detail:hover .episode-thumbnail-detail img {
+  transform: scale(1.05);
+}
+
+.episode-placeholder-detail {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.episode-play-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-size: 2rem;
+  color: white;
+}
+
+.episode-card-detail:hover .episode-play-overlay {
+  opacity: 1;
+}
+
+.episode-watched-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: rgba(16, 185, 129, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.episode-info-detail {
+  flex: 1;
+  padding: 12px 16px 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.episode-header-detail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.episode-number-detail {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.episode-runtime-detail {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.episode-title-detail {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.episode-overview-detail {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.no-episodes {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .season-header {
+    padding: 16px;
+  }
+
+  .season-poster-small {
+    width: 50px;
+    height: 75px;
+  }
+
+  .season-header-info h4 {
+    font-size: 1rem;
+  }
+
+  .season-meta {
+    font-size: 0.85rem;
+  }
+
+  .episode-thumbnail-detail {
+    width: 140px;
+    height: 79px;
+  }
+
+  .episode-info-detail {
+    padding: 8px 12px 8px 0;
+  }
+
+  .episode-title-detail {
+    font-size: 0.95rem;
+  }
+
+  .episode-overview-detail {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .season-header-left {
+    gap: 12px;
+  }
+
+  .season-poster-small {
+    width: 40px;
+    height: 60px;
+  }
+
+  .season-header-info h4 {
+    font-size: 0.95rem;
+  }
+
+  .episode-card-detail {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .episode-thumbnail-detail {
+    width: 100%;
+    height: 180px;
+  }
+
+  .episode-info-detail {
+    padding: 12px;
+  }
+}

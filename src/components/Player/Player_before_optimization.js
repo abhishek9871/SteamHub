@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   FiArrowLeft, FiExternalLink, FiAlertTriangle, FiInfo, 
-  FiChevronDown, FiPlay, FiClock, FiCheckCircle, FiSkipForward 
+  FiChevronDown, FiChevronRight, FiPlay, FiClock, FiCheckCircle 
 } from 'react-icons/fi';
 import { moviesApi, tvApi } from '../../services/tmdbApi';
 import { vidsrcCcApi } from '../../services/vidsrcCcApi';
@@ -14,6 +14,7 @@ const Player = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const iframeRef = useRef(null);
+  const autoPlayTimeoutRef = useRef(null);
 
   // Basic states
   const [content, setContent] = useState(null);
@@ -22,40 +23,38 @@ const Player = () => {
   const [streamUrl, setStreamUrl] = useState(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
 
-  // TV Series states (only for TV shows)
+  // TV Series states
   const [seasons, setSeasons] = useState([]);
   const [currentSeason, setCurrentSeason] = useState(1);
   const [currentEpisode, setCurrentEpisode] = useState(1);
   const [episodes, setEpisodes] = useState([]);
   const [showEpisodeList, setShowEpisodeList] = useState(false);
-  const [showSeasonSelector, setShowSeasonSelector] = useState(false);
   const [watchedEpisodes, setWatchedEpisodes] = useState(new Set());
+  
+  // Auto-play next episode states
+  const [showNextEpisodePopup, setShowNextEpisodePopup] = useState(false);
+  const [nextEpisodeCountdown, setNextEpisodeCountdown] = useState(10);
+  const [isSeriesComplete, setIsSeriesComplete] = useState(false);
 
-  // Initialize from URL params if available (TV only)
+  // Initialize from URL params if available
   useEffect(() => {
-    if (type === 'tv') {
-      const season = parseInt(searchParams.get('season')) || 1;
-      const episode = parseInt(searchParams.get('episode')) || 1;
-      setCurrentSeason(season);
-      setCurrentEpisode(episode);
-    }
-  }, [type, searchParams]);
+    const season = parseInt(searchParams.get('season')) || 1;
+    const episode = parseInt(searchParams.get('episode')) || 1;
+    setCurrentSeason(season);
+    setCurrentEpisode(episode);
+  }, []);
 
-  // Load content - OPTIMIZED for fast movie loading
+  // Load content and generate stream URL
   useEffect(() => {
     loadContent();
   }, [type, id, currentSeason, currentEpisode]);
 
-  // Load watched episodes from localStorage (TV only)
+  // Load watched episodes from localStorage
   useEffect(() => {
     if (type === 'tv' && id) {
       const stored = localStorage.getItem(`watched_${id}`);
       if (stored) {
-        try {
-          setWatchedEpisodes(new Set(JSON.parse(stored)));
-        } catch (e) {
-          console.error('Error loading watch history:', e);
-        }
+        setWatchedEpisodes(new Set(JSON.parse(stored)));
       }
     }
   }, [type, id]);
@@ -66,45 +65,39 @@ const Player = () => {
       setError(null);
       setIframeLoaded(false);
 
-      // OPTIMIZATION: For movies, only fetch basic details and stream URL
+      // Fetch content details from TMDB
+      let contentData;
       if (type === 'movie') {
-        const [contentData, url] = await Promise.all([
-          moviesApi.getDetails(id),
-          Promise.resolve(vidsrcCcApi.getMovieStreamFromDomain(id, null, 'vidsrc.cc'))
-        ]);
+        contentData = await moviesApi.getDetails(id);
+      } else {
+        contentData = await tvApi.getDetails(id);
         
-        setContent(contentData);
-        if (url) {
-          setStreamUrl(url);
-          console.log('✅ Movie stream ready:', url);
-        } else {
-          throw new Error('Failed to generate stream URL');
+        // Fetch seasons for TV shows
+        const seasonsData = await tvApi.getSeasons(id);
+        setSeasons(seasonsData.filter(s => s.season_number > 0)); // Exclude specials
+        
+        // Fetch episodes for current season
+        const seasonDetails = await tvApi.getSeasonDetails(id, currentSeason);
+        setEpisodes(seasonDetails.episodes || []);
+      }
+
+      setContent(contentData);
+
+      // Generate vidsrc.cc embed URL
+      const url = type === 'movie' 
+        ? vidsrcCcApi.getMovieStreamFromDomain(id, null, 'vidsrc.cc')
+        : vidsrcCcApi.getTvStreamFromDomain(id, null, currentSeason, currentEpisode, 'vidsrc.cc');
+
+      if (url) {
+        setStreamUrl(url);
+        console.log('✅ Stream URL generated:', url);
+        
+        // Update URL params for TV shows
+        if (type === 'tv') {
+          setSearchParams({ season: currentSeason, episode: currentEpisode });
         }
       } else {
-        // For TV shows, fetch all required data
-        const contentData = await tvApi.getDetails(id);
-        setContent(contentData);
-        
-        // Fetch seasons and episodes in parallel
-        const [seasonsData, seasonDetails] = await Promise.all([
-          tvApi.getSeasons(id),
-          tvApi.getSeasonDetails(id, currentSeason)
-        ]);
-        
-        const filteredSeasons = seasonsData.filter(s => s.season_number > 0);
-        setSeasons(filteredSeasons);
-        setEpisodes(seasonDetails.episodes || []);
-        
-        // Generate stream URL
-        const url = vidsrcCcApi.getTvStreamFromDomain(id, null, currentSeason, currentEpisode, 'vidsrc.cc');
-        
-        if (url) {
-          setStreamUrl(url);
-          console.log('✅ TV stream ready:', url);
-          setSearchParams({ season: currentSeason, episode: currentEpisode }, { replace: true });
-        } else {
-          throw new Error('Failed to generate stream URL');
-        }
+        throw new Error('Failed to generate stream URL');
       }
     } catch (err) {
       console.error('Error loading content:', err);
@@ -121,6 +114,17 @@ const Player = () => {
     // Mark episode as watched for TV shows
     if (type === 'tv') {
       markEpisodeWatched(currentSeason, currentEpisode);
+      
+      // Start auto-play timer (simulate end of episode after 5 seconds for demo)
+      // In production, this would be triggered by actual video end event
+      if (autoPlayTimeoutRef.current) {
+        clearTimeout(autoPlayTimeoutRef.current);
+      }
+      
+      // Simulate episode end after 30 seconds for demo (remove this in production)
+      // autoPlayTimeoutRef.current = setTimeout(() => {
+      //   handleEpisodeEnd();
+      // }, 30000);
     }
   };
 
@@ -131,20 +135,31 @@ const Player = () => {
     setWatchedEpisodes(newWatched);
     
     // Save to localStorage
-    try {
-      localStorage.setItem(`watched_${id}`, JSON.stringify([...newWatched]));
-    } catch (e) {
-      console.error('Error saving watch history:', e);
-    }
+    localStorage.setItem(`watched_${id}`, JSON.stringify([...newWatched]));
   };
 
   const isEpisodeWatched = (season, episode) => {
     return watchedEpisodes.has(`${season}-${episode}`);
   };
 
-  const getNextEpisode = () => {
-    if (type !== 'tv') return null;
+  const handleEpisodeEnd = useCallback(() => {
+    if (type !== 'tv') return;
     
+    const nextEp = getNextEpisode();
+    if (nextEp) {
+      // Show next episode popup
+      setShowNextEpisodePopup(true);
+      startNextEpisodeCountdown();
+    } else {
+      // Series complete
+      setIsSeriesComplete(true);
+      setTimeout(() => {
+        navigate(`/series-complete/${id}`);
+      }, 3000);
+    }
+  }, [type, currentSeason, currentEpisode, episodes, seasons]);
+
+  const getNextEpisode = () => {
     // Check if there's a next episode in current season
     if (currentEpisode < episodes.length) {
       return {
@@ -165,51 +180,37 @@ const Player = () => {
     return null;
   };
 
-  const getPreviousEpisode = () => {
-    if (type !== 'tv') return null;
+  const startNextEpisodeCountdown = () => {
+    let count = 10;
+    setNextEpisodeCountdown(count);
     
-    // Check if there's a previous episode in current season
-    if (currentEpisode > 1) {
-      return {
-        season: currentSeason,
-        episode: currentEpisode - 1
-      };
-    }
-    
-    // Check if there's a previous season
-    if (currentSeason > 1) {
-      const prevSeasonData = seasons.find(s => s.season_number === currentSeason - 1);
-      if (prevSeasonData) {
-        // Need to know how many episodes in previous season
-        // For now, just go to episode 1
-        return {
-          season: currentSeason - 1,
-          episode: 1
-        };
+    const interval = setInterval(() => {
+      count -= 1;
+      setNextEpisodeCountdown(count);
+      
+      if (count <= 0) {
+        clearInterval(interval);
+        playNextEpisode();
       }
-    }
+    }, 1000);
     
-    return null;
+    // Store interval for cleanup
+    autoPlayTimeoutRef.current = interval;
+  };
+
+  const cancelAutoPlay = () => {
+    if (autoPlayTimeoutRef.current) {
+      clearInterval(autoPlayTimeoutRef.current);
+    }
+    setShowNextEpisodePopup(false);
   };
 
   const playNextEpisode = () => {
     const nextEp = getNextEpisode();
     if (nextEp) {
+      setShowNextEpisodePopup(false);
       setCurrentSeason(nextEp.season);
       setCurrentEpisode(nextEp.episode);
-      setShowEpisodeList(false);
-    } else {
-      // Series complete
-      navigate(`/series-complete/${id}`);
-    }
-  };
-
-  const playPreviousEpisode = () => {
-    const prevEp = getPreviousEpisode();
-    if (prevEp) {
-      setCurrentSeason(prevEp.season);
-      setCurrentEpisode(prevEp.episode);
-      setShowEpisodeList(false);
     }
   };
 
@@ -217,19 +218,6 @@ const Player = () => {
     setCurrentSeason(season);
     setCurrentEpisode(episode);
     setShowEpisodeList(false);
-  };
-
-  const handleSeasonChange = async (seasonNumber) => {
-    try {
-      setCurrentSeason(seasonNumber);
-      setCurrentEpisode(1);
-      
-      // Fetch episodes for new season
-      const seasonDetails = await tvApi.getSeasonDetails(id, seasonNumber);
-      setEpisodes(seasonDetails.episodes || []);
-    } catch (err) {
-      console.error('Error loading season:', err);
-    }
   };
 
   const handleRetry = () => {
@@ -243,6 +231,15 @@ const Player = () => {
       window.open(streamUrl, '_blank', 'noopener,noreferrer');
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (autoPlayTimeoutRef.current) {
+        clearInterval(autoPlayTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Loading state
   if (loading) {
@@ -292,9 +289,6 @@ const Player = () => {
     ? episodes.find(ep => ep.episode_number === currentEpisode)
     : null;
 
-  const nextEpisode = getNextEpisode();
-  const prevEpisode = getPreviousEpisode();
-
   return (
     <div className="player-container">
       {/* Header */}
@@ -326,24 +320,14 @@ const Player = () => {
 
         <div className="header-right">
           {type === 'tv' && (
-            <>
-              <button
-                className="header-season-btn"
-                onClick={() => setShowSeasonSelector(!showSeasonSelector)}
-                aria-label="Select Season"
-              >
-                Season {currentSeason}
-                <FiChevronDown />
-              </button>
-              <button
-                className="header-episodes-btn"
-                onClick={() => setShowEpisodeList(!showEpisodeList)}
-                aria-label="Episodes"
-              >
-                Episodes
-                <FiChevronDown />
-              </button>
-            </>
+            <button
+              className="header-episodes-btn"
+              onClick={() => setShowEpisodeList(!showEpisodeList)}
+              aria-label="Episodes"
+            >
+              Episodes
+              <FiChevronDown />
+            </button>
           )}
           <button
             className="header-action-btn"
@@ -356,48 +340,28 @@ const Player = () => {
         </div>
       </header>
 
-      {/* Season Selector Dropdown (for TV shows with multiple seasons) */}
-      {type === 'tv' && showSeasonSelector && seasons.length > 0 && (
-        <div className="season-selector-dropdown">
-          <div className="season-selector-content">
-            <h3>Select Season</h3>
-            <div className="season-grid">
-              {seasons.map(season => (
-                <button
-                  key={season.season_number}
-                  className={`season-card ${currentSeason === season.season_number ? 'active' : ''}`}
-                  onClick={() => {
-                    handleSeasonChange(season.season_number);
-                    setShowSeasonSelector(false);
-                  }}
-                >
-                  <div className="season-poster">
-                    {season.poster_path ? (
-                      <img
-                        src={getImageUrl(season.poster_path, 'w185')}
-                        alt={season.name}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="season-placeholder">S{season.season_number}</div>
-                    )}
-                  </div>
-                  <div className="season-info">
-                    <h4>{season.name}</h4>
-                    <p>{season.episode_count} Episodes</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Episode Selector Dropdown */}
       {type === 'tv' && showEpisodeList && (
         <div className="episode-selector-dropdown">
           <div className="episode-selector-content">
-            <h3>Season {currentSeason} Episodes</h3>
+            <div className="season-selector">
+              <h3>Season {currentSeason}</h3>
+              <div className="season-buttons">
+                {seasons.map(season => (
+                  <button
+                    key={season.season_number}
+                    className={`season-btn ${currentSeason === season.season_number ? 'active' : ''}`}
+                    onClick={() => {
+                      setCurrentSeason(season.season_number);
+                      setCurrentEpisode(1);
+                    }}
+                  >
+                    Season {season.season_number}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="episodes-grid">
               {episodes.map(episode => {
                 const isWatched = isEpisodeWatched(currentSeason, episode.episode_number);
@@ -444,8 +408,8 @@ const Player = () => {
                       )}
                       {episode.overview && (
                         <p className="episode-overview">
-                          {episode.overview.substring(0, 120)}
-                          {episode.overview.length > 120 ? '...' : ''}
+                          {episode.overview.substring(0, 150)}
+                          {episode.overview.length > 150 ? '...' : ''}
                         </p>
                       )}
                     </div>
@@ -480,16 +444,51 @@ const Player = () => {
           onLoad={handleIframeLoad}
         />
 
-        {/* Next Episode Button (always visible for TV shows) */}
-        {type === 'tv' && nextEpisode && (
-          <button 
-            className="next-episode-floating-btn"
-            onClick={playNextEpisode}
-            title="Next Episode"
-          >
-            <FiSkipForward />
-            <span>Next Episode</span>
-          </button>
+        {/* Next Episode Popup (Netflix-style) */}
+        {showNextEpisodePopup && getNextEpisode() && (
+          <div className="next-episode-popup">
+            <div className="next-episode-content">
+              <div className="next-episode-info">
+                <h3>Next Episode</h3>
+                {(() => {
+                  const nextEp = getNextEpisode();
+                  const nextEpData = nextEp.season === currentSeason 
+                    ? episodes.find(ep => ep.episode_number === nextEp.episode)
+                    : null;
+                  
+                  return (
+                    <>
+                      <p className="next-episode-title">
+                        S{nextEp.season}:E{nextEp.episode} {nextEpData?.name || 'Loading...'}
+                      </p>
+                      <div className="next-episode-countdown">
+                        Playing in {nextEpisodeCountdown}s...
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+              <div className="next-episode-actions">
+                <button onClick={cancelAutoPlay} className="cancel-btn">
+                  Cancel
+                </button>
+                <button onClick={playNextEpisode} className="play-now-btn">
+                  <FiPlay /> Play Now
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Series Complete Popup */}
+        {isSeriesComplete && (
+          <div className="series-complete-popup">
+            <div className="series-complete-content">
+              <h2>🎉 Series Complete!</h2>
+              <p>You've finished watching {content.title}</p>
+              <p>Redirecting to recommendations...</p>
+            </div>
+          </div>
         )}
       </div>
 
@@ -568,17 +567,31 @@ const Player = () => {
               <div className="episode-navigation">
                 <button
                   className="nav-btn prev-btn"
-                  onClick={playPreviousEpisode}
-                  disabled={!prevEpisode}
+                  onClick={() => {
+                    if (currentEpisode > 1) {
+                      setCurrentEpisode(currentEpisode - 1);
+                    } else if (currentSeason > 1) {
+                      // Go to last episode of previous season
+                      setCurrentSeason(currentSeason - 1);
+                      // Will need to load that season's episodes first
+                    }
+                  }}
+                  disabled={currentSeason === 1 && currentEpisode === 1}
                 >
                   ← Previous Episode
                 </button>
                 <button
                   className="nav-btn next-btn"
-                  onClick={playNextEpisode}
-                  disabled={!nextEpisode}
+                  onClick={() => {
+                    const nextEp = getNextEpisode();
+                    if (nextEp) {
+                      setCurrentSeason(nextEp.season);
+                      setCurrentEpisode(nextEp.episode);
+                    }
+                  }}
+                  disabled={!getNextEpisode()}
                 >
-                  {nextEpisode ? 'Next Episode →' : 'Series Complete ✓'}
+                  Next Episode →
                 </button>
               </div>
             )}
