@@ -154,55 +154,202 @@
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
+  margin-top: 24px;
 }
 
 .play-btn,
 .watchlist-btn {
-  padding: 14px 28px;
-  border-radius: 6px;
+  padding: 16px 32px;
+  border-radius: 12px;
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
+  gap: 10px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   text-decoration: none;
   border: none;
-  min-width: 140px;
+  min-width: 160px;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+/* Play Button - Premium CTA */
 .play-btn {
-  background: var(--primary-color);
+  background: linear-gradient(145deg, #2a2a72 0%, #0039a6 100%);
   color: white;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 
+    0 8px 16px rgba(0, 57, 166, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 57, 166, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.play-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.6s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.play-btn:hover::before {
+  left: 100%;
 }
 
 .play-btn:hover {
-  background: var(--primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(229, 9, 20, 0.4);
+  background: linear-gradient(145deg, #0039a6 0%, #2a2a72 100%);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 12px 25px rgba(0, 57, 166, 0.4),
+    0 4px 8px rgba(0, 57, 166, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: white;
 }
 
+.play-btn:active {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 
+    0 6px 15px rgba(0, 57, 166, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Watchlist Button - Premium Design */
 .watchlist-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  font-weight: 500;
+  box-shadow: 
+    0 4px 12px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.watchlist-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 12px;
 }
 
 .watchlist-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 8px 20px rgba(255, 255, 255, 0.15),
+    0 4px 8px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: white;
 }
 
 .watchlist-btn.active {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
+  background: linear-gradient(145deg, #1e3c72 0%, #2a5298 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 16px rgba(30, 60, 114, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
-.play-icon {
+.watchlist-btn.active:hover {
+  background: linear-gradient(145deg, #2a5298 0%, #1e3c72 100%);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 12px 25px rgba(30, 60, 114, 0.4),
+    0 4px 8px rgba(30, 60, 114, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Button Icons - Premium Design */
+.play-icon,
+.watchlist-btn svg {
   font-size: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+  position: relative;
+}
+
+.play-btn:hover .play-icon {
+  transform: translateX(6px) scale(1.05);
+}
+
+.watchlist-btn:hover svg {
+  transform: scale(1.05) translateY(-1px);
+}
+
+.watchlist-btn.active svg {
+  fill: white;
+  transform: scale(1.1) translateY(-1px);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Enhanced focus states for accessibility */
+.play-btn:focus,
+.watchlist-btn:focus {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.5);
+}
+
+/* Micro-interactions */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.play-btn.active {
+  animation: pulse 0.3s ease-in-out;
+}
+
+/* Loading state */
+.play-btn.loading,
+.watchlist-btn.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.play-btn.loading::after,
+.watchlist-btn.loading::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
 }
 
 .hero-poster {
@@ -279,12 +426,18 @@
 
   .hero-actions {
     justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
   }
 
   .play-btn,
   .watchlist-btn {
     width: 100%;
-    max-width: 200px;
+    max-width: 280px;
+    padding: 18px 32px;
+    font-size: 1.125rem;
+    min-width: 280px;
   }
 
   .detail-content {
@@ -318,8 +471,54 @@
     font-size: 1rem;
   }
 
+  .play-btn,
+  .watchlist-btn {
+    padding: 16px 28px;
+    font-size: 1.0625rem;
+    min-width: 260px;
+    max-width: 260px;
+  }
+
   .detail-content {
     padding: 16px 12px;
+  }
+}
+
+/* Extra small devices (320px and below) */
+@media (max-width: 320px) {
+  .play-btn,
+  .watchlist-btn {
+    padding: 14px 24px;
+    font-size: 0.9375rem;
+    min-width: 240px;
+    max-width: 240px;
+  }
+
+  .hero-actions {
+    gap: 10px;
+  }
+}
+
+/* Touch-friendly enhancements for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .play-btn,
+  .watchlist-btn {
+    padding: 18px 32px;
+    min-height: 56px;
+  }
+
+  .play-btn:hover,
+  .watchlist-btn:hover {
+    transform: none;
+    /* Remove hover effects on touch devices */
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .play-btn,
+  .watchlist-btn {
+    font-weight: 600;
   }
 }
 
@@ -333,6 +532,29 @@
 .watchlist-btn:focus,
 .back-btn:focus {
   outline-offset: 2px;
+}
+
+/* High contrast focus for better accessibility */
+@media (prefers-contrast: high) {
+  .play-btn:focus,
+  .watchlist-btn:focus {
+    outline: 3px solid black;
+    outline-offset: 3px;
+    border: 2px solid black;
+  }
+}
+
+/* Screen reader improvements */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Reduced Motion */

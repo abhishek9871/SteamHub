@@ -479,19 +479,21 @@ const Player = () => {
           referrerPolicy="no-referrer-when-downgrade"
           onLoad={handleIframeLoad}
         />
+      </div>
 
-        {/* Next Episode Button (always visible for TV shows) */}
-        {type === 'tv' && nextEpisode && (
+      {/* Next Episode Button (for TV shows) - Positioned below video player */}
+      {type === 'tv' && nextEpisode && (
+        <div className="next-episode-below-player">
           <button 
-            className="next-episode-floating-btn"
+            className="next-episode-below-btn"
             onClick={playNextEpisode}
             title="Next Episode"
           >
             <FiSkipForward />
             <span>Next Episode</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Content Details Section */}
       <section className="content-details-section">

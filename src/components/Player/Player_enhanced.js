@@ -421,7 +421,7 @@ const Player = () => {
         </div>
       )}
 
-      {/* Full Screen Video Player */}
+        {/* Full Screen Video Player */}
       <div className="video-player-wrapper">
         {!iframeLoaded && (
           <div className="iframe-loading-overlay">
@@ -491,6 +491,20 @@ const Player = () => {
           </div>
         )}
       </div>
+
+      {/* Next Episode Button (for TV shows) - Positioned below video player */}
+      {type === 'tv' && getNextEpisode() && (
+        <div className="next-episode-below-player">
+          <button 
+            className="next-episode-below-btn"
+            onClick={playNextEpisode}
+            title="Next Episode"
+          >
+            <FiPlay />
+            <span>Next Episode</span>
+          </button>
+        </div>
+      )}
 
       {/* Content Details Section */}
       <section className="content-details-section">
